@@ -2,58 +2,104 @@ const mongoose = require('mongoose');
 
 const EmployeeSchema = new mongoose.Schema({
   firstname: {
-    type: String
+    type: String,
+    required: true,
+    trim: true,
+    lowercase: true
   },
   lastname: {
-    type: String
+    type: String,
+    alias: 'surname',
+    required: [true, 'Last Name is required'],
+    trim: true,
+    lowercase: true
   },
   email: {
-    type: String
+    type: String,
+    required: true,
+    trim: true,
+    uppercase: true,
+    minlength: 5,
+    maxlength: 50,
+    validate: function (value) {
+      var emailRegex = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+      return emailRegex.test(value)
+    }
   },
   gender: {
-    type: String
+    type: String,
+    required: true,
+    enum: ['Male', 'Female', 'other']
   },
-  city:{
+  city: {
     type: String
   },
   designation: {
     type: String
   },
   salary: {
-    type: Number
+    type: Number,
+    default: 0.0,
+    max: 100000,
+    validate: function (value) {
+      if (value < 0) {
+        throw new Error(`${value} Salary can't accept negative value`)
+      }
+    }
   },
-  created: { 
-    type: Date
+  created: {
+    type: Date,
+    default: Date.now()
   },
-  updatedat: { 
-    type: Date
+  updatedat: {
+    type: Date,
+    default: Date.now()
   },
 });
 
 //Declare Virtual Fields
-
+EmployeeSchema.virtual('fullname')
+  .get(function () {
+    return `${this.firstname} ${this.lastname}`
+  })
 
 //Custom Schema Methods
 //1. Instance Method Declaration
+//Same as virtual
+EmployeeSchema.methods.getFullName = function (){
+  return `${this.firstname} ${this.lastname}`
+}
 
+EmployeeSchema.methods.getObjectString = function (){
+  return JSON.stringify(this)
+}
 
 //2. Static method declararion
+EmployeeSchema.statics.getEmployeeByFirstName = function(fname){
+  return this.find({firstname: fname})
+}
 
+EmployeeSchema.statics.getEmployeeByLastName = function(lname){
+  return this.find({lastname: lname})
+}
 
 //Writing Query Helpers
+EmployeeSchema.query.byFirstName = function(fname) {
+  return this.where({firstname: fname})
+}
 
 
 
 EmployeeSchema.pre('save', (next) => {
   console.log("Before Save")
   let now = Date.now()
-   
+
   this.updatedat = now
   // Set a value for createdAt only if it is null
   if (!this.created) {
     this.created = now
   }
-  
+
   // Call the next function in the pre-save chain
   next()
 });

@@ -15,6 +15,7 @@ app.get('/employees', async (req, res) => {
   
   try {
     console.log(employees[0].surname)
+    console.log(employees[0].fullname)
     res.status(200).send(employees);
   } catch (err) {
     res.status(500).send(err);
@@ -39,20 +40,24 @@ app.get('/employee', async (req, res) => {
 //http://localhost:8081/employees/firstname/pritesh
 app.get('/employees/firstname/:name', async (req, res) => {
   const name = req.params.name
-  const employees = await employeeModel.find({firstname : name});
-  
-  //Using Virtual Field Name
-  //console.log(employees[0].fullname)
-
-  //Using Instance method
-  //console.log(employees[0].getFullName())
+  // const employees = await employeeModel.find({firstname : name});
 
   //Using Static method
-  //const employees = await employeeModel.getEmployeeByFirstName(name)
-  
-  //Using Query Helper
+  const employees = await employeeModel.getEmployeeByFirstName(name)
+
+    //Using Query Helper
   //const employees = await employeeModel.findOne().byFirstName(name)
+
+  //const employees = await employeeModel.findOne().byFirstName(name).lean() <-this will convert the request to java object
+  //It will not print employees[0].fullname in this case and it will return undefined
   
+  //Using Virtual Field Name
+  console.log(employees[0].fullname)
+
+  //Using Instance method
+  console.log(employees[0].getFullName())
+  console.log(employees[0].getObjectString())
+
   try {
     if(employees.length != 0){
       res.send(employees);
